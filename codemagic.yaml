@@ -1,0 +1,29 @@
+workflows:
+  nurnama-apk:
+    name: Nurnama APK
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      flutter: stable
+    scripts:
+      - name: Prepare files
+        script: |
+          mkdir -p lib
+          if [ -f main.dart ]; then cp main.dart lib/main.dart; fi
+      - name: Create Android project
+        script: flutter create --platforms=android --org com.masum --project-name nurnama .
+      - name: Patch Android and make icon
+        script: |
+          pip3 install pillow || pip3 install --break-system-packages pillow
+          python3 setup.py
+      - name: Get packages
+        script: flutter pub get
+      - name: Launcher icons
+        script: dart run flutter_launcher_icons
+      - name: Build APK
+        script: |
+          AZAN=false
+          if [ -f azan.mp3 ] || [ -f audio/azan.mp3 ]; then AZAN=true; fi
+          flutter build apk --release --dart-define=AZAN=$AZAN
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
