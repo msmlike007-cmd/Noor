@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>নূরনামা — গোপনীয়তা নীতি</title>
+<style>body{font-family:system-ui,"Noto Sans Bengali",sans-serif;line-height:1.75;max-width:850px;margin:32px auto;padding:0 18px;color:#18352b}h1,h2{color:#0b3d2e}</style></head>
+<body><h1>নূরনামা — গোপনীয়তা নীতি</h1>
+<p><b>কার্যকর হওয়ার তারিখ:</b> ১২ নভেম্বর ২০২৬</p>
+<p>এই নীতিটি নূরনামা অ্যাপের বর্তমান প্রদত্ত সোর্স কোডের ভিত্তিতে প্রস্তুত খসড়া। প্রকাশের আগে অ্যাপের চূড়ান্ত build ও ব্যবহৃত SDK মিলিয়ে account owner-কে যাচাই করতে হবে।</p>
+<h2>১. ডিভাইসে সংরক্ষিত তথ্য</h2><p>নাম, পছন্দ, নামাজ ট্র্যাকার, অ্যালার্ম সেটিংস, হিজরি তারিখ সমন্বয় এবং কনটেন্ট cache ডিভাইসে SharedPreferences বা app storage-এ রাখা হয়। অ্যাপে বর্তমানে ব্যবহারকারী অ্যাকাউন্ট বা পাসওয়ার্ড ব্যবস্থা দেখা যায়নি।</p>
+<h2>২. লোকেশন</h2><p>নামাজের সময় গণনা ও এলাকার নাম নির্ধারণের জন্য অনুমতি নিয়ে GPS location ব্যবহার করা হতে পারে। এলাকার নাম বের করতে অক্ষাংশ ও দ্রাঘিমাংশ OpenStreetMap Nominatim reverse-geocoding পরিষেবায় পাঠানো হয়। GPS অনুমতি না দিলে সেটিংসে নিজে জেলা/অবস্থান বেছে নেওয়া যায়। বহিরাগত পরিষেবার নিজস্ব লগ ও গোপনীয়তা নীতি প্রযোজ্য।</p>
+<h2>৩. অনলাইন পরিষেবা</h2><ul><li>কুরআনের সূরা/আয়াত: AlQuran Cloud API।</li><li>এলাকার নাম: OpenStreetMap Nominatim।</li><li>আপডেট পরীক্ষা: GitHub-এ রাখা version.json।</li><li>হাদিস পেজ: ব্যবহারকারী নিজে বাহ্যিক Sunnah.com বা HadithBD ওয়েবসাইট খুলতে পারেন।</li></ul><p>এসব পরিষেবা IP address ও অনুরোধ-সংক্রান্ত প্রযুক্তিগত তথ্য প্রক্রিয়া করতে পারে। তাদের নিজস্ব নীতি প্রযোজ্য।</p>
+<h2>৪. বিজ্ঞাপন ও বিশ্লেষণ</h2><p>প্রদত্ত pubspec.yaml-এ বিজ্ঞাপন বা analytics SDK দেখা যায়নি। ভবিষ্যতে SDK যোগ হলে এই নীতি এবং Play Console Data safety তথ্য হালনাগাদ করতে হবে।</p>
+<h2>৫. তথ্য মুছে ফেলা</h2><p>অ্যাপের স্থানীয় তথ্য মুছতে Android Settings থেকে অ্যাপের Storage-এর Clear data ব্যবহার করুন অথবা অ্যাপ আনইনস্টল করুন। তৃতীয় পক্ষের সার্ভারের লগ তাদের নিজস্ব নীতির অধীন।</p>
+<h2>৬. যোগাযোগ</h2><p>সহায়তা: <a href="https://t.me/MasumNoornama">https://t.me/MasumNoornama</a></p>
+</body></html>
