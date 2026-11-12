@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -25,8 +24,8 @@ part 'app_state.dart';
 part 'home_page.dart';
 part 'more_pages.dart';
 part 'quran_dua.dart';
-part 'settings_about.dart';
 part 'hadiths_page.dart';
+part 'settings_about.dart';
 
 // ═════════════ App ═════════════
 Future<void> main() async {
