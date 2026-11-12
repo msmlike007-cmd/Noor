@@ -1,61 +1,30 @@
 workflows:
-  nurnama-apk:
-    name: Nurnama APK
+  nurnama-play-store:
+    name: Noornama - Google Play AAB
     instance_type: mac_mini_m2
-    max_build_duration: 30
+    max_build_duration: 60
     environment:
       flutter: stable
+      android_signing:
+        - nurnama_keystore
     scripts:
-      - name: Check source files
+      - name: Create Android platform project
         script: |
-          ls -la
-          ls -la lib
-          for f in main core notifications app_state home_page more_pages quran_dua settings_about; do
-            if [ ! -f "lib/$f.dart" ]; then
-              echo "MISSING: lib/$f.dart"
-              exit 1
-            fi
-          done
-          for f in pubspec.yaml setup.py; do
-            if [ ! -f "$f" ]; then
-              echo "MISSING in repo root: $f"
-              exit 1
-            fi
-          done
-          head -8 lib/main.dart
-          if grep -q "MyHomePage" lib/main.dart; then
-            echo "ERROR: lib/main.dart is the default Flutter template, not your app"
-            exit 1
-          fi
-      - name: Create Android project
+          flutter create --platforms=android --org com.masum --project-name nurnama /tmp/nurnama_android
+          cp -R /tmp/nurnama_android/android ./android
+      - name: Generate assets and configure Android
         script: |
-          flutter create --platforms=android --org com.masum --project-name nurnama /tmp/proj
-          cp -r /tmp/proj/android ./android
-      - name: Patch Android and make icon
-        script: |
-          pip3 install pillow || pip3 install --break-system-packages pillow
+          python3 -m pip install --upgrade pillow
           python3 setup.py
-      - name: Get packages
+          python3 scripts/set_android_sdk.py
+      - name: Resolve Flutter packages
         script: flutter pub get
-      - name: Launcher icons
+      - name: Generate launcher icons
         script: dart run flutter_launcher_icons
-      - name: Disable broken Android lint
-        script: |
-          mkdir -p ~/.gradle/init.d
-          cat > ~/.gradle/init.d/nolint.gradle <<'EOF'
-          allprojects {
-              tasks.configureEach { t ->
-                  if (t.name.startsWith('lintVital') || t.name.startsWith('lintAnalyze') || t.name == 'lint') {
-                      t.enabled = false
-                  }
-              }
-          }
-          EOF
-          cat ~/.gradle/init.d/nolint.gradle
-      - name: Build APK
+      - name: Build signed Play Store App Bundle
         script: |
           AZAN=false
           if [ -f azan.mp3 ] || [ -f audio/azan.mp3 ]; then AZAN=true; fi
-          flutter build apk --release --dart-define=AZAN=$AZAN
+          flutter build appbundle --release --dart-define=AZAN=$AZAN
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/bundle/release/*.aab

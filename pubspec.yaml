@@ -1,7 +1,7 @@
 name: nurnama
 description: নূরনামা - নামাজের সময়, আজান, কিবলা, কুরআন ও আরও
 publish_to: 'none'
-version: 2.1.0+3
+version: 2.1.1+4
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
