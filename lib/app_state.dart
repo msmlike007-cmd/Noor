@@ -41,15 +41,15 @@ class AppState extends ChangeNotifier {
 
   Future<void> load() async {
     sp = await SharedPreferences.getInstance();
-    adj = sp.getInt('adj') ?? 0;
-    themeMode = sp.getInt('theme') ?? 0;
+    adj = (sp.getInt('adj') ?? 0).clamp(-2, 2).toInt();
+    themeMode = (sp.getInt('theme') ?? 0).clamp(0, 2).toInt();
     hanafi = sp.getBool('hanafi') ?? true;
     remind = sp.getBool('remind') ?? true;
     method = sp.getString('method') ?? 'auto';
     name = sp.getString('name') ?? '';
     title = sp.getString('title') ?? 'ভাই';
     lastPopup = sp.getString('popup') ?? '';
-    arSize = sp.getDouble('arSize') ?? 26;
+    arSize = (sp.getDouble('arSize') ?? 26).clamp(18, 44).toDouble();
     final cj = sp.getString('customs');
     if (cj != null) {
       try {
@@ -135,7 +135,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> setAdj(int v) async {
-    adj = v.clamp(-2, 2);
+    adj = v.clamp(-2, 2).toInt();
     await sp.setInt('adj', adj);
     notifyListeners();
   }
@@ -150,7 +150,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> setTheme(int v) async {
-    themeMode = v;
+    themeMode = v.clamp(0, 2).toInt();
     await sp.setInt('theme', v);
     notifyListeners();
   }
@@ -182,7 +182,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> setArSize(double v) async {
-    arSize = v.clamp(18, 44);
+    arSize = v.clamp(18, 44).toDouble();
     await sp.setDouble('arSize', arSize);
     notifyListeners();
   }

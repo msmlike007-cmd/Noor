@@ -15,6 +15,7 @@ class MorePage extends StatelessWidget {
       [Icons.alarm_add, 'আমার অ্যালার্ম', () => openPage(context, 'আমার অ্যালার্ম', CustomAlarmPage(s))],
       [Icons.checklist, 'নামাজ ট্র্যাকার', () => openPage(context, 'নামাজ ট্র্যাকার', TrackerPage(s))],
       [Icons.favorite, 'দোয়া', () => openPage(context, 'কুরআনের দোয়া', DuaPage(s))],
+      [Icons.menu_book, 'হাদিস', () => openPage(context, 'হাদিস পাঠাগার', HadithPage(s))],
       [Icons.shield, 'রুকইয়াহ', () => openPage(context, 'রুকইয়াহ', RuqyahPage(s))],
       [Icons.settings, 'সেটিংস', () => openPage(context, 'সেটিংস', SetPage(s))],
       [Icons.info, 'অ্যাবাউট', () => openPage(context, 'অ্যাবাউট', AboutPage(s))],

@@ -24,6 +24,7 @@ part 'app_state.dart';
 part 'home_page.dart';
 part 'more_pages.dart';
 part 'quran_dua.dart';
+part 'hadith_page.dart';
 part 'settings_about.dart';
 
 // ═════════════ App ═════════════

@@ -3,8 +3,8 @@ part of 'main.dart';
 // ═════════════ Constants ═════════════
 const kApp = 'নূরনামা';
 const kAzan = bool.fromEnvironment('AZAN');
-const kVersion = '2.1.0';
-const kBuild = 3;
+const kVersion = '2.1.1';
+const kBuild = 4;
 const green = Color(0xFF0B3D2E);
 const green2 = Color(0xFF14604A);
 const gold = Color(0xFFD4AF37);
