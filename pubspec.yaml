@@ -1,10 +1,10 @@
 name: nurnama
 description: নূরনামা - নামাজের সময়, আজান, কিবলা, কুরআন ও আরও
 publish_to: 'none'
-version: 2.0.0+2
+version: 2.1.0+3
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -12,16 +12,14 @@ dependencies:
   adhan: ^2.0.0+1
   hijri: ^3.0.0
   geolocator: ^12.0.0
-  geocoding: ^3.0.0
   flutter_local_notifications: ^17.2.4
   timezone: ^0.9.4
   shared_preferences: ^2.2.3
-  flutter_compass: ^0.8.0
+  flutter_compass: ^0.8.1
   http: ^1.2.0
   path_provider: ^2.1.3
   url_launcher: ^6.3.0
   share_plus: ^9.0.0
-  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:
@@ -30,6 +28,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/logo.png
 
 flutter_launcher_icons:
   android: true

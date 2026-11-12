@@ -42,6 +42,15 @@ os.makedirs('assets', exist_ok=True)
 art(1024, 1.0, True).save('assets/icon.png')
 art(1024, 0.62, False).save('assets/icon_fg.png')
 
+# in-app logo (assets/logo.png): use the user's own logo if present, else draw the default one
+if not os.path.exists('assets/logo.png'):
+    for cand in ['logo.png', 'logo-preview.png', 'lib/logo-preview.png']:
+        if os.path.exists(cand):
+            shutil.copy(cand, 'assets/logo.png')
+            break
+    else:
+        art(512, 1.0, True).save('assets/logo.png')
+
 # ---------- Manifest ----------
 mf = 'android/app/src/main/AndroidManifest.xml'
 s = open(mf, encoding='utf8').read()
