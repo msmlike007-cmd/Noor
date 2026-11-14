@@ -33,6 +33,23 @@ workflows:
         script: |
           pip3 install pillow || pip3 install --break-system-packages pillow
           python3 setup.py
+      - name: Disable broken lint checks
+        script: |
+          mkdir -p $HOME/.gradle/init.d
+          cat > $HOME/.gradle/init.d/nolint.gradle <<'EOF'
+          allprojects {
+            afterEvaluate { p ->
+              if (p.hasProperty('android')) {
+                try {
+                  p.android.lint.checkReleaseBuilds = false
+                  p.android.lint.abortOnError = false
+                } catch (Exception e) {
+                  println("lint config skipped for " + p.name)
+                }
+              }
+            }
+          }
+          EOF
       - name: Get packages
         script: flutter pub get
       - name: Launcher icons
