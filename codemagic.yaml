@@ -1,30 +1,46 @@
 workflows:
-  nurnama-play-store:
-    name: Noornama - Google Play AAB
+  nurnama-apk:
+    name: Nurnama APK
     instance_type: mac_mini_m2
-    max_build_duration: 60
+    max_build_duration: 30
     environment:
       flutter: stable
-      android_signing:
-        - nurnama_keystore
     scripts:
-      - name: Create Android platform project
+      - name: Check source files
         script: |
-          flutter create --platforms=android --org com.masum --project-name nurnama /tmp/nurnama_android
-          cp -R /tmp/nurnama_android/android ./android
-      - name: Generate assets and configure Android
+          ls -la
+          ls -la lib
+          for f in main core notifications app_state home_page more_pages quran_dua hadith_page settings_about; do
+            if [ ! -f "lib/$f.dart" ]; then
+              echo "MISSING: lib/$f.dart"
+              exit 1
+            fi
+          done
+          head -8 lib/main.dart
+          if grep -q "MyHomePage" lib/main.dart; then
+            echo "ERROR: lib/main.dart is the default Flutter template, not your app"
+            exit 1
+          fi
+          if [ ! -f pubspec.yaml ]; then
+            echo "MISSING: pubspec.yaml in repo root"
+            exit 1
+          fi
+      - name: Create Android project
         script: |
-          python3 -m pip install --upgrade pillow
+          flutter create --platforms=android --org com.masum --project-name nurnama /tmp/proj
+          cp -r /tmp/proj/android ./android
+      - name: Patch Android and make icon
+        script: |
+          pip3 install pillow || pip3 install --break-system-packages pillow
           python3 setup.py
-          python3 scripts/set_android_sdk.py
-      - name: Resolve Flutter packages
+      - name: Get packages
         script: flutter pub get
-      - name: Generate launcher icons
+      - name: Launcher icons
         script: dart run flutter_launcher_icons
-      - name: Build signed Play Store App Bundle
+      - name: Build APK
         script: |
           AZAN=false
           if [ -f azan.mp3 ] || [ -f audio/azan.mp3 ]; then AZAN=true; fi
-          flutter build appbundle --release --dart-define=AZAN=$AZAN
+          flutter build apk --release --dart-define=AZAN=$AZAN
     artifacts:
-      - build/app/outputs/bundle/release/*.aab
+      - build/app/outputs/flutter-apk/*.apk
