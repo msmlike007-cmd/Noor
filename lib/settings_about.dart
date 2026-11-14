@@ -29,7 +29,7 @@ class SetPage extends StatelessWidget {
         sec('লোকেশন', [
           Text('বর্তমান: ${s.place}'),
           const SizedBox(height: 8),
-          FilledButton.icon(onPressed: s.gps, icon: const Icon(Icons.my_location), label: const Text('GPS থেকে লোকেশন নিন (থানা পর্যন্ত, বিদেশেও চলবে)')),
+          FilledButton.icon(onPressed: () => s.gps(), icon: const Icon(Icons.my_location), label: const Text('GPS থেকে লোকেশন নিন (থানা পর্যন্ত, বিদেশেও চলবে)')),
           const SizedBox(height: 8),
           DropdownButton<String>(
             isExpanded: true,
@@ -38,8 +38,15 @@ class SetPage extends StatelessWidget {
             items: [for (final d in dists) DropdownMenuItem(value: d.n, child: Text(d.n))],
             onChanged: (v) {
               final d = dists.firstWhere((x) => x.n == v);
-              s.setLoc(d.la, d.lo, d.n);
+              s.setLoc(d.la, d.lo, d.n, manual: true);
             },
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('স্বয়ংক্রিয় লোকেশন'),
+            subtitle: const Text('অ্যাপ খুললে GPS থেকে নিজে নিজে হালনাগাদ হবে। জেলা বেছে নিলে এটি বন্ধ হয়ে যায়।'),
+            value: s.autoLoc,
+            onChanged: s.setAutoLoc,
           ),
         ]),
         sec('নামাজের সময় গণনা', [
@@ -55,7 +62,15 @@ class SetPage extends StatelessWidget {
             ],
             onChanged: (v) => s.setMethod(v ?? 'auto'),
           ),
-          SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('আসরের অ্যালার্ম: হানাফি সময়ে'), subtitle: const Text('বন্ধ করলে আহলে হাদিস/জমহুর সময়ে বাজবে'), value: s.hanafi, onChanged: s.setHanafi),
+          const Text('আসরের সময় (অ্যালার্ম ও যোহরের শেষ সময় এই অনুযায়ী)', style: TextStyle(fontSize: 14)),
+          const SizedBox(height: 6),
+          SegmentedButton<bool>(
+            segments: const [ButtonSegment(value: true, label: Text('হানাফি')), ButtonSegment(value: false, label: Text('আহলে হাদিস/জমহুর'))],
+            selected: {s.hanafi},
+            onSelectionChanged: (v) => s.setHanafi(v.first),
+          ),
+          const SizedBox(height: 4),
+          Text('হোম পেজে দুই সময়ই দেখানো হয়; ✓ চিহ্ন নির্বাচিতটির পাশে থাকে।', style: TextStyle(fontSize: 12, color: mute(context))),
           Row(children: [
             const Expanded(child: Text('হিজরি তারিখ সমন্বয় (দিন)')),
             IconButton(onPressed: () => s.setAdj(s.adj - 1), icon: const Icon(Icons.remove_circle_outline)),
@@ -164,7 +179,7 @@ class AboutPage extends StatelessWidget {
       ),
       Padding(
         padding: const EdgeInsets.all(12),
-        child: Text('কুরআনের আরবি ও বাংলা অনুবাদ: alquran.cloud (অনুবাদ: মুহিউদ্দীন খান)।', style: TextStyle(fontSize: 12, color: mute(context)), textAlign: TextAlign.center),
+        child: Text('কুরআনের আরবি ও বাংলা অনুবাদ: alquran.cloud (অনুবাদ: মুহিউদ্দীন খান)। হাদিস (ডাউনলোডকৃত): Hadith API।', style: TextStyle(fontSize: 12, color: mute(context)), textAlign: TextAlign.center),
       ),
     ]);
   }

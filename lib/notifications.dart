@@ -98,7 +98,7 @@ class Notif {
           priority: Priority.high,
           actions: [
             AndroidNotificationAction('prayed', 'হ্যাঁ, পড়েছি', cancelNotification: true, showsUserInterface: false),
-            AndroidNotificationAction('later', 'পরে', cancelNotification: true, showsUserInterface: false),
+            AndroidNotificationAction('later', 'না, পড়িনি', cancelNotification: true, showsUserInterface: false),
           ],
         ),
       );
@@ -117,7 +117,15 @@ class Notif {
     return false;
   }
 
-  static Future<void> schedule(AppState s) async {
+  // একসাথে দুইবার schedule চললে একটা অন্যটার অ্যালার্ম মুছে ফেলতে পারে, তাই একটার পর একটা চলে
+  static Future<void> _chain = Future.value();
+  static Future<void> schedule(AppState s) {
+    final next = _chain.then((_) => _schedule(s)).catchError((_) {});
+    _chain = next;
+    return next;
+  }
+
+  static Future<void> _schedule(AppState s) async {
     await p.cancelAll();
     final now = DateTime.now();
     final base = dOnly(now);

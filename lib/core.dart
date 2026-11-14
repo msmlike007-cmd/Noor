@@ -3,8 +3,8 @@ part of 'main.dart';
 // ═════════════ Constants ═════════════
 const kApp = 'নূরনামা';
 const kAzan = bool.fromEnvironment('AZAN');
-const kVersion = '2.1.1';
-const kBuild = 4;
+const kVersion = '2.2.0';
+const kBuild = 5;
 const green = Color(0xFF0B3D2E);
 const green2 = Color(0xFF14604A);
 const gold = Color(0xFFD4AF37);
@@ -160,6 +160,48 @@ Future<void> openUrl(String u) async {
 
 void openPage(BuildContext ctx, String title, Widget page) =>
     Navigator.push(ctx, MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: Text(title)), body: SafeArea(child: page))));
+
+// ═════════════ Copy / share ═════════════
+Future<void> copyText(BuildContext context, String text, String what) async {
+  await Clipboard.setData(ClipboardData(text: text));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text('$what কপি হয়েছে'), duration: const Duration(seconds: 2)));
+}
+
+class CopyBar extends StatelessWidget {
+  final String ar, ucc, tr, ref;
+  const CopyBar({super.key, this.ar = '', this.ucc = '', this.tr = '', this.ref = ''});
+
+  String get all {
+    final p = <String>[];
+    if (ar.trim().isNotEmpty) p.add(ar.trim());
+    if (ucc.trim().isNotEmpty) p.add('উচ্চারণ: ${ucc.trim()}');
+    if (tr.trim().isNotEmpty) p.add('অনুবাদ: ${tr.trim()}');
+    final foot = ref.trim().isEmpty ? kApp : '${ref.trim()} • $kApp';
+    p.add('— $foot');
+    return p.join('\n\n');
+  }
+
+  Widget btn(String label, IconData i, VoidCallback f) => TextButton.icon(
+        onPressed: f,
+        icon: Icon(i, size: 16),
+        label: Text(label, style: const TextStyle(fontSize: 12.5)),
+        style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(spacing: 2, children: [
+      if (ar.trim().isNotEmpty) btn('আরবি', Icons.copy, () => copyText(context, ar.trim(), 'আরবি')),
+      if (ucc.trim().isNotEmpty) btn('উচ্চারণ', Icons.copy, () => copyText(context, ucc.trim(), 'উচ্চারণ')),
+      if (tr.trim().isNotEmpty) btn('অনুবাদ', Icons.copy, () => copyText(context, tr.trim(), 'অনুবাদ')),
+      btn('সব কপি', Icons.copy_all, () => copyText(context, all, 'সবকিছু')),
+      btn('শেয়ার', Icons.share, () => Share.share(all)),
+    ]);
+  }
+}
 
 // ═════════════ Quran data (alquran.cloud, cached on phone) ═════════════
 class QS {

@@ -6,7 +6,8 @@ class AppState extends ChangeNotifier {
   String place = 'ঢাকা';
   List<bool> on = List.filled(5, true);
   int adj = 0, themeMode = 0;
-  bool hanafi = true, remind = true, loaded = false;
+  bool hanafi = true, remind = true, loaded = false, autoLoc = true;
+  DateTime? _lastGps;
   String method = 'auto', name = '', title = 'ভাই', note = '', lastPopup = '';
   double arSize = 26;
   List<Map<String, dynamic>> customs = [];
@@ -45,6 +46,7 @@ class AppState extends ChangeNotifier {
     themeMode = (sp.getInt('theme') ?? 0).clamp(0, 2).toInt();
     hanafi = sp.getBool('hanafi') ?? true;
     remind = sp.getBool('remind') ?? true;
+    autoLoc = sp.getBool('autoLoc') ?? true;
     method = sp.getString('method') ?? 'auto';
     name = sp.getString('name') ?? '';
     title = sp.getString('title') ?? 'ভাই';
@@ -65,7 +67,6 @@ class AppState extends ChangeNotifier {
     }
     loaded = true;
     notifyListeners();
-    if (!sp.containsKey('lat')) await gps();
   }
 
   Future<String> _label(double la, double lo) async {
@@ -91,30 +92,62 @@ class AppState extends ChangeNotifier {
     return '${la.toStringAsFixed(2)}, ${lo.toStringAsFixed(2)}';
   }
 
-  Future<void> gps() async {
+  /// silent=true: অ্যাপ খোলার সময় নীরবে চলে, অনুমতি চায় না, বার্তাও দেখায় না
+  Future<void> gps({bool silent = false}) async {
+    if (silent) {
+      final n = DateTime.now();
+      if (_lastGps != null && n.difference(_lastGps!).inMinutes < 30) return;
+      _lastGps = n;
+    }
+    void warn(String m) {
+      if (silent) return;
+      note = m;
+      notifyListeners();
+    }
+
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        note = 'ফোনের লোকেশন (GPS) চালু করুন';
-        notifyListeners();
+        warn('ফোনের লোকেশন (GPS) চালু করুন');
         return;
       }
       var p = await Geolocator.checkPermission();
-      if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
+      if (p == LocationPermission.denied && !silent) p = await Geolocator.requestPermission();
       if (p == LocationPermission.denied || p == LocationPermission.deniedForever) {
-        note = 'লোকেশনের অনুমতি দিন, অথবা সেটিংসে জেলা বেছে নিন';
-        notifyListeners();
+        warn('লোকেশনের অনুমতি দিন, অথবা সেটিংসে জেলা বেছে নিন');
         return;
       }
-      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low, timeLimit: const Duration(seconds: 25));
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low, timeLimit: const Duration(seconds: 25));
+      } catch (_) {
+        pos = await Geolocator.getLastKnownPosition();
+      }
+      if (pos == null) {
+        warn('লোকেশন পাওয়া যায়নি, সেটিংসে জেলা বেছে নিন');
+        return;
+      }
+      if (!silent && !autoLoc) {
+        autoLoc = true;
+        await sp.setBool('autoLoc', true);
+      }
       note = '';
-      await setLoc(pos.latitude, pos.longitude, await _label(pos.latitude, pos.longitude));
+      final first = !sp.containsKey('lat');
+      final moved = Geolocator.distanceBetween(lat, lon, pos.latitude, pos.longitude);
+      if (first || !silent || moved > 2000) {
+        await setLoc(pos.latitude, pos.longitude, await _label(pos.latitude, pos.longitude));
+      } else {
+        notifyListeners();
+      }
     } catch (_) {
-      note = 'লোকেশন পাওয়া যায়নি, সেটিংসে জেলা বেছে নিন';
-      notifyListeners();
+      warn('লোকেশন পাওয়া যায়নি, সেটিংসে জেলা বেছে নিন');
     }
   }
 
-  Future<void> setLoc(double la, double lo, String nm) async {
+  Future<void> setLoc(double la, double lo, String nm, {bool manual = false}) async {
+    if (manual && autoLoc) {
+      autoLoc = false;
+      await sp.setBool('autoLoc', false);
+    }
     lat = la;
     lon = lo;
     place = nm;
@@ -123,6 +156,13 @@ class AppState extends ChangeNotifier {
     await sp.setString('place', nm);
     notifyListeners();
     await resched();
+  }
+
+  Future<void> setAutoLoc(bool v) async {
+    autoLoc = v;
+    await sp.setBool('autoLoc', v);
+    notifyListeners();
+    if (v) await gps();
   }
 
   Future<void> resched() => Notif.schedule(this);

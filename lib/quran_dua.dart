@@ -74,9 +74,9 @@ List<String> noBis(int n, List<String> a) {
 
 class AyahTile extends StatelessWidget {
   final AppState s;
-  final String arText, bnText, ucc;
+  final String arText, bnText, ucc, ref;
   final int? no;
-  const AyahTile(this.s, this.arText, this.bnText, {super.key, this.no, this.ucc = ''});
+  const AyahTile(this.s, this.arText, this.bnText, {super.key, this.no, this.ucc = '', this.ref = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -87,13 +87,14 @@ class AyahTile extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (no != null) Align(alignment: Alignment.centerLeft, child: CircleAvatar(radius: 13, backgroundColor: green2, child: Text(bn(no!), style: const TextStyle(color: Colors.white, fontSize: 11)))),
           const SizedBox(height: 6),
-          Text(arText, textAlign: TextAlign.right, textDirection: TextDirection.rtl, style: TextStyle(fontSize: s.arSize, height: 1.9)),
+          SelectableText(arText, textAlign: TextAlign.right, textDirection: TextDirection.rtl, style: TextStyle(fontSize: s.arSize, height: 1.9)),
           if (ucc.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text('উচ্চারণ: $ucc', style: TextStyle(fontSize: 15, height: 1.6, color: pri(context))),
+            SelectableText('উচ্চারণ: $ucc', style: TextStyle(fontSize: 15, height: 1.6, color: pri(context))),
           ],
           const Divider(),
-          Text(bnText, style: const TextStyle(fontSize: 16, height: 1.5)),
+          SelectableText(bnText, style: const TextStyle(fontSize: 16, height: 1.5)),
+          CopyBar(ar: arText, ucc: ucc, tr: bnText, ref: ref),
         ]),
       ),
     );
@@ -134,7 +135,7 @@ class SurahPage extends StatelessWidget {
             }
             return ListView(padding: const EdgeInsets.all(10), children: [
               if (bis != null) Center(child: Padding(padding: const EdgeInsets.all(8), child: Text(bis, textDirection: TextDirection.rtl, style: TextStyle(fontSize: s.arSize + 2, color: gold)))),
-              for (var i = 0; i < ar0.length; i++) AyahTile(s, ar0[i], i < d.bn.length ? d.bn[i] : '', no: i + 1),
+              for (var i = 0; i < ar0.length; i++) AyahTile(s, ar0[i], i < d.bn.length ? d.bn[i] : '', no: i + 1, ref: '$nm ($n:${i + 1})'),
               Padding(padding: const EdgeInsets.all(12), child: Text('আরবি: উসমানি লিপি • অনুবাদ: মুহিউদ্দীন খান • সূত্র: alquran.cloud', style: TextStyle(fontSize: 11, color: mute(context)), textAlign: TextAlign.center)),
             ]);
           },
@@ -144,7 +145,7 @@ class SurahPage extends StatelessWidget {
   }
 }
 
-// ═════════════ Dua & Ruqyah (Quran-sourced text only) ═════════════
+// ═════════════ Dua & Ruqyah (Quran + sunnah) ═════════════
 class Item {
   final String title, benefit, source;
   final List<String> refs;
@@ -193,7 +194,7 @@ class ItemCard extends StatelessWidget {
                 if (snap.hasError || snap.data == null) return const Padding(padding: EdgeInsets.only(top: 10), child: Text('আয়াত আনা যায়নি, ইন্টারনেট চালু করে আবার খুলুন।', style: TextStyle(color: Colors.orange)));
                 final d = snap.data!;
                 return Column(children: [
-                  for (var i = 0; i < d.ar.length; i++) AyahTile(s, d.ar[i], i < d.bn.length ? d.bn[i] : '', ucc: i < it.ucc.length ? it.ucc[i] : ''),
+                  for (var i = 0; i < d.ar.length; i++) AyahTile(s, d.ar[i], i < d.bn.length ? d.bn[i] : '', ucc: i < it.ucc.length ? it.ucc[i] : '', ref: it.source.isEmpty ? it.title : '${it.title} • ${it.source}'),
                 ]);
               },
             ),
@@ -210,6 +211,52 @@ class ItemCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// হাদিস/সুন্নাহ থেকে নেওয়া দোয়া: আরবি, উচ্চারণ ও অনুবাদ অ্যাপের ভেতরেই থাকে (অফলাইনে চলে)।
+class SItem {
+  final String group, title, benefit, source, ar, ucc, bnText;
+  const SItem(this.group, this.title, this.benefit, this.source, {required this.ar, required this.ucc, required this.bnText});
+}
+
+class SItemCard extends StatelessWidget {
+  final AppState s;
+  final SItem it;
+  const SItemCard(this.s, this.it, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(it.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          Text(it.benefit, style: const TextStyle(fontSize: 14, height: 1.5)),
+          Text('সূত্র: ${it.source}', style: TextStyle(fontSize: 12, color: mute(context))),
+          AyahTile(s, it.ar, it.bnText, ucc: it.ucc, ref: '${it.title} • ${it.source}'),
+        ]),
+      ),
+    );
+  }
+}
+
+List<Widget> sunnahWidgets(BuildContext context, AppState s, List<SItem> items, {bool showGroups = true}) {
+  final out = <Widget>[];
+  String? last;
+  for (final it in items) {
+    if (showGroups && it.group != last) {
+      last = it.group;
+      out.add(Padding(
+        padding: const EdgeInsets.only(top: 14, bottom: 4),
+        child: Text(it.group, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: pri(context))),
+      ));
+    }
+    out.add(SItemCard(s, it));
+  }
+  return out;
 }
 
 const duaItems = [
@@ -310,13 +357,84 @@ const ruqyahItems = [
       ucc: ['ওয়া নুনায্যিলু মিনাল কুরআনি মা হুওয়া শিফাউঁ ওয়া রাহমাতুল লিল মু\'মিনীনা ওয়া লা ইয়াযীদুয যালিমীনা ইল্লা খাসারা।', 'ওয়া ইযা মারিদতু ফাহুওয়া ইয়াশফীন।']),
 ];
 
+const sunnahNote = 'এই অংশের দোয়াগুলো হাদিস থেকে নেওয়া। আরবি, উচ্চারণ ও অনুবাদ অ্যাপের ভেতরেই আছে, ইন্টারনেট লাগে না। অনুবাদ অর্থভিত্তিক। আরবি পাঠ ও হাদিসের মান নির্ভরযোগ্য গ্রন্থ (যেমন হিসনুল মুসলিম) ও আলেমের কাছে মিলিয়ে নিন।';
+
+const sunnahDuas = [
+  SItem("সকাল-সন্ধ্যা ও ঘুম", "সাইয়্যিদুল ইসতিগফার", "নবী (সা.) একে ইসতিগফারের সেরা দোয়া বলেছেন। দিনে দৃঢ় বিশ্বাসের সাথে পড়ে সন্ধ্যার আগে মারা গেলে সে জান্নাতি, রাতে পড়ে সকালের আগে মারা গেলেও একই কথা এসেছে।", "সহীহ বুখারি",
+      ar: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+      ucc: "আল্লাহুম্মা আনতা রাব্বী, লা ইলাহা ইল্লা আনতা, খালাক্বতানী ওয়া আনা আবদুকা, ওয়া আনা আলা আহদিকা ওয়া ওয়া'দিকা মাসতাতা'তু, আঊযু বিকা মিন শাররি মা সানা'তু, আবূউ লাকা বিনি'মাতিকা আলাইয়া, ওয়া আবূউ বিযানবী ফাগফির লী, ফা-ইন্নাহূ লা ইয়াগফিরুয যুনূবা ইল্লা আনতা।",
+      bnText: "হে আল্লাহ, আপনি আমার রব। আপনি ছাড়া কোনো ইলাহ নেই। আপনি আমাকে সৃষ্টি করেছেন, আমি আপনার বান্দা। আমি যথাসাধ্য আপনার অঙ্গীকার ও প্রতিশ্রুতির ওপর আছি। আমি যা করেছি তার অনিষ্ট থেকে আপনার আশ্রয় চাই। আমার ওপর আপনার নিয়ামত স্বীকার করছি এবং আমার গুনাহও স্বীকার করছি। অতএব আমাকে ক্ষমা করুন, কারণ আপনি ছাড়া কেউ গুনাহ ক্ষমা করতে পারে না।"),
+  SItem("সকাল-সন্ধ্যা ও ঘুম", "সকাল-সন্ধ্যার হেফাজতের দোয়া", "সকাল ও সন্ধ্যায় তিনবার পড়লে কোনো কিছু তার ক্ষতি করতে পারবে না বলে হাদিসে এসেছে।", "আবু দাউদ, জামে তিরমিযি (সহীহ)",
+      ar: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+      ucc: "বিসমিল্লাহিল্লাযী লা ইয়াদুররু মা'আ ইসমিহী শাইউন ফিল আরদি ওয়া লা ফিস সামা-ই, ওয়া হুওয়াস সামী'উল আলীম।",
+      bnText: "আল্লাহর নামে, যাঁর নামের সাথে আসমান ও জমিনের কোনো কিছুই ক্ষতি করতে পারে না। তিনি সর্বশ্রোতা, সর্বজ্ঞ।"),
+  SItem("সকাল-সন্ধ্যা ও ঘুম", "ঘুমানোর দোয়া", "ঘুমাতে যাওয়ার সময় নবী (সা.) এই দোয়া পড়তেন।", "সহীহ বুখারি",
+      ar: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
+      ucc: "বিসমিকাল্লাহুম্মা আমূতু ওয়া আহইয়া।",
+      bnText: "হে আল্লাহ, আপনার নামেই আমি মরি (ঘুমাই) এবং বাঁচি (জাগি)।"),
+  SItem("সকাল-সন্ধ্যা ও ঘুম", "ঘুম থেকে উঠার দোয়া", "ঘুম থেকে জেগে নবী (সা.) এই দোয়া পড়তেন।", "সহীহ বুখারি",
+      ar: "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ",
+      ucc: "আলহামদু লিল্লাহিল্লাযী আহইয়ানা বা'দা মা আমাতানা ওয়া ইলাইহিন নুশূর।",
+      bnText: "সকল প্রশংসা আল্লাহর, যিনি আমাদের মৃত্যুর (ঘুমের) পর জীবিত করেছেন। আর তাঁর কাছেই পুনরুত্থান।"),
+  SItem("ওযু ও নামাজ", "ওযুর পরের দোয়া", "ওযুর পর এই দোয়া পড়লে জান্নাতের আটটি দরজা খুলে দেওয়া হয়, যেটি দিয়ে ইচ্ছা প্রবেশ করতে পারবে।", "সহীহ মুসলিম",
+      ar: "أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ",
+      ucc: "আশহাদু আল লা ইলাহা ইল্লাল্লাহু ওয়াহদাহূ লা শারীকা লাহু, ওয়া আশহাদু আন্না মুহাম্মাদান আবদুহূ ওয়া রাসূলুহ।",
+      bnText: "আমি সাক্ষ্য দিচ্ছি, আল্লাহ ছাড়া কোনো ইলাহ নেই, তিনি এক, তাঁর কোনো শরিক নেই। আমি আরও সাক্ষ্য দিচ্ছি, মুহাম্মাদ (সা.) তাঁর বান্দা ও রাসূল।"),
+  SItem("ওযু ও নামাজ", "আযানের পরের দোয়া", "আযানের জবাব দেওয়ার পর দরূদ পড়ে এই দোয়া পড়লে কিয়ামতের দিন নবী (সা.)-এর শাফাআত পাওয়ার কথা হাদিসে এসেছে।", "সহীহ বুখারি",
+      ar: "اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ الْقَائِمَةِ، آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ",
+      ucc: "আল্লাহুম্মা রাব্বা হাযিহিদ দা'ওয়াতিত তাম্মাহ, ওয়াস সালাতিল কা-ইমাহ, আ-তি মুহাম্মাদানিল ওয়াসীলাতা ওয়াল ফাদীলাহ, ওয়াব'আসহু মাকামাম মাহমূদানিল্লাযী ওয়া'আদতাহ।",
+      bnText: "হে আল্লাহ, এই পূর্ণাঙ্গ আহ্বান ও প্রতিষ্ঠিত নামাজের রব! মুহাম্মাদ (সা.)-কে ওসিলা ও মর্যাদা দান করুন এবং তাঁকে সেই প্রশংসিত স্থানে পৌঁছান, যার প্রতিশ্রুতি আপনি দিয়েছেন।"),
+  SItem("খাওয়া-দাওয়া", "খাওয়ার শুরুতে", "খাওয়ার শুরুতে বিসমিল্লাহ বলা সুন্নাহ।", "সহীহ বুখারি, সহীহ মুসলিম",
+      ar: "بِسْمِ اللَّهِ",
+      ucc: "বিসমিল্লাহ।",
+      bnText: "আল্লাহর নামে (শুরু করছি)।"),
+  SItem("খাওয়া-দাওয়া", "শুরুতে বিসমিল্লাহ ভুলে গেলে", "খাওয়ার শুরুতে বিসমিল্লাহ বলতে ভুলে গেলে মনে পড়ার সাথে সাথে এটি বলতে হবে।", "আবু দাউদ, জামে তিরমিযি",
+      ar: "بِسْمِ اللَّهِ أَوَّلَهُ وَآخِرَهُ",
+      ucc: "বিসমিল্লাহি আউওয়ালাহূ ওয়া আখিরাহ।",
+      bnText: "এর শুরুতে ও শেষে আল্লাহর নামে।"),
+  SItem("খাওয়া-দাওয়া", "খাওয়ার পরের দোয়া", "যে ব্যক্তি খাওয়ার পর এই দোয়া পড়ে, তার পূর্বের গুনাহ মাফ করা হয় বলে হাদিসে এসেছে।", "আবু দাউদ, জামে তিরমিযি (হাসান)",
+      ar: "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا، وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ",
+      ucc: "আলহামদু লিল্লাহিল্লাযী আত্বআমানী হাযা, ওয়া রাযাক্বানীহি মিন গাইরি হাওলিম মিন্নী ওয়া লা কুওওয়াহ।",
+      bnText: "সকল প্রশংসা আল্লাহর, যিনি আমাকে এই খাবার খাইয়েছেন এবং আমার কোনো উপায় ও শক্তি ছাড়াই তা রিযিক হিসেবে দিয়েছেন।"),
+  SItem("ঘর থেকে বের হওয়া", "ঘর থেকে বের হওয়ার দোয়া", "ঘর থেকে বের হওয়ার সময় এটি পড়লে বলা হয়, তুমি পথপ্রাপ্ত হলে, তোমার জন্য যথেষ্ট করা হলো ও তুমি রক্ষিত হলে। আর শয়তান তার কাছ থেকে সরে যায়।", "আবু দাউদ, জামে তিরমিযি (সহীহ)",
+      ar: "بِسْمِ اللَّهِ، تَوَكَّلْتُ عَلَى اللَّهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ",
+      ucc: "বিসমিল্লাহ, তাওয়াক্কালতু আলাল্লাহ, ওয়া লা হাওলা ওয়া লা কুওওয়াতা ইল্লা বিল্লাহ।",
+      bnText: "আল্লাহর নামে (বের হলাম), আল্লাহর ওপর ভরসা করলাম। আল্লাহর সাহায্য ছাড়া কোনো উপায় বা শক্তি নেই।"),
+  SItem("দুশ্চিন্তা ও ঋণ", "দুশ্চিন্তা ও ঋণ থেকে আশ্রয়", "নবী (সা.) প্রায়ই এই দোয়া করতেন।", "সহীহ বুখারি",
+      ar: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ، وَالْبُخْلِ وَالْجُبْنِ، وَضَلَعِ الدَّيْنِ، وَغَلَبَةِ الرِّجَالِ",
+      ucc: "আল্লাহুম্মা ইন্নী আঊযু বিকা মিনাল হাম্মি ওয়াল হাযান, ওয়াল আজযি ওয়াল কাসাল, ওয়াল বুখলি ওয়াল জুবন, ওয়া দালা'ইদ দাইনি ওয়া গালাবাতির রিজাল।",
+      bnText: "হে আল্লাহ, আমি আপনার আশ্রয় চাই দুশ্চিন্তা ও দুঃখ থেকে, অক্ষমতা ও অলসতা থেকে, কৃপণতা ও ভীরুতা থেকে, ঋণের বোঝা ও মানুষের দমন-পীড়ন থেকে।"),
+];
+
+const sunnahRuqyah = [
+  SItem("", "জিবরীল (আ.)-এর রুকইয়াহ", "জিবরীল (আ.) নবী (সা.)-কে এই দোয়া দিয়ে ঝাড়ফুঁক করেছেন।", "সহীহ মুসলিম",
+      ar: "بِسْمِ اللَّهِ أَرْقِيكَ، مِنْ كُلِّ شَيْءٍ يُؤْذِيكَ، مِنْ شَرِّ كُلِّ نَفْسٍ أَوْ عَيْنِ حَاسِدٍ، اللَّهُ يَشْفِيكَ، بِسْمِ اللَّهِ أَرْقِيكَ",
+      ucc: "বিসমিল্লাহি আরক্বীক, মিন কুল্লি শাইয়িন ইউ'যীক, মিন শাররি কুল্লি নাফসিন আও আইনি হাসিদিন, আল্লাহু ইয়াশফীক, বিসমিল্লাহি আরক্বীক।",
+      bnText: "আল্লাহর নামে আমি আপনাকে ঝাড়ফুঁক করছি, প্রত্যেক কষ্টদায়ক জিনিস থেকে, প্রত্যেক প্রাণী বা হিংসুকের চোখের অনিষ্ট থেকে। আল্লাহ আপনাকে আরোগ্য দিন। আল্লাহর নামে আপনাকে ঝাড়ফুঁক করছি।"),
+  SItem("", "রোগীর জন্য শিফার দোয়া", "রোগী দেখতে গিয়ে বা অসুস্থ কারও জন্য নবী (সা.) এই দোয়া পড়তেন।", "সহীহ বুখারি, সহীহ মুসলিম",
+      ar: "اللَّهُمَّ رَبَّ النَّاسِ، أَذْهِبِ الْبَاسَ، اشْفِ وَأَنْتَ الشَّافِي، لَا شِفَاءَ إِلَّا شِفَاؤُكَ، شِفَاءً لَا يُغَادِرُ سَقَمًا",
+      ucc: "আল্লাহুম্মা রাব্বান নাস, আযহিবিল বা'স, ইশফি ওয়া আনতাশ শাফী, লা শিফাআ ইল্লা শিফাউক, শিফাআন লা ইউগাদিরু সাক্বামা।",
+      bnText: "হে আল্লাহ, মানুষের রব! কষ্ট দূর করে দিন, আরোগ্য দান করুন। আপনিই আরোগ্যদাতা। আপনার আরোগ্য ছাড়া কোনো আরোগ্য নেই, এমন আরোগ্য যা কোনো রোগ অবশিষ্ট রাখে না।"),
+  SItem("", "ব্যথার জায়গায় হাত রেখে পড়ার দোয়া", "শরীরের যেখানে ব্যথা, সেখানে হাত রেখে তিনবার বিসমিল্লাহ বলে সাতবার এই দোয়া পড়ার নির্দেশনা এসেছে।", "সহীহ মুসলিম",
+      ar: "أَعُوذُ بِاللَّهِ وَقُدْرَتِهِ مِنْ شَرِّ مَا أَجِدُ وَأُحَاذِرُ",
+      ucc: "আঊযু বিল্লাহি ওয়া কুদরাতিহী মিন শাররি মা আজিদু ওয়া উহাযির।",
+      bnText: "আমি আল্লাহর এবং তাঁর ক্ষমতার আশ্রয় চাই, আমি যে ব্যথা অনুভব করছি ও যার আশঙ্কা করছি তার অনিষ্ট থেকে।"),
+  SItem("", "আল্লাহর পরিপূর্ণ বাণীর আশ্রয়", "কোনো জায়গায় অবস্থান করে এটি পড়লে সেখান থেকে চলে যাওয়া পর্যন্ত কোনো কিছু তার ক্ষতি করতে পারবে না বলে হাদিসে এসেছে।", "সহীহ মুসলিম",
+      ar: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      ucc: "আঊযু বিকালিমাতিল্লাহিত তাম্মাতি মিন শাররি মা খালাক্ব।",
+      bnText: "আমি আল্লাহর পরিপূর্ণ বাণীসমূহের আশ্রয় চাই, তিনি যা সৃষ্টি করেছেন তার অনিষ্ট থেকে।"),
+];
+
 class DuaPage extends StatelessWidget {
   final AppState s;
   const DuaPage(this.s, {super.key});
   @override
   Widget build(BuildContext context) => ListView(padding: const EdgeInsets.all(12), children: [
-        Text('এখানকার আরবি ও অনুবাদ কুরআন থেকে সরাসরি নেওয়া (alquran.cloud, অনুবাদ: মুহিউদ্দীন খান)। প্রথমবার ইন্টারনেট লাগবে, পরে অফলাইনে চলবে।\nবাংলা উচ্চারণ আনুমানিক; সঠিক তিলাওয়াত যোগ্য ওস্তাদের কাছে শিখে নিন।', style: TextStyle(fontSize: 12, color: mute(context))),
+        Text('কুরআনের দোয়া অংশের আরবি ও অনুবাদ কুরআন থেকে সরাসরি নেওয়া (alquran.cloud, অনুবাদ: মুহিউদ্দীন খান)। প্রথমবার ইন্টারনেট লাগবে, পরে অফলাইনে চলবে।\nবাংলা উচ্চারণ আনুমানিক; সঠিক তিলাওয়াত যোগ্য ওস্তাদের কাছে শিখে নিন।', style: TextStyle(fontSize: 12, color: mute(context))),
         for (final it in duaItems) ItemCard(s, it),
+        const Padding(padding: EdgeInsets.only(top: 18, bottom: 4), child: Text('সুন্নাহর দোয়া', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700))),
+        Text(sunnahNote, style: TextStyle(fontSize: 12, color: mute(context), height: 1.5)),
+        ...sunnahWidgets(context, s, sunnahDuas),
       ]);
 }
 
@@ -343,5 +461,8 @@ class RuqyahPage extends StatelessWidget {
         ),
         Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('বাংলা উচ্চারণ আনুমানিক; সঠিক তিলাওয়াত যোগ্য ওস্তাদের কাছে শিখে নিন।', style: TextStyle(fontSize: 12, color: mute(context)))),
         for (final it in ruqyahItems) ItemCard(s, it),
+        const Padding(padding: EdgeInsets.only(top: 18, bottom: 4), child: Text('সুন্নাহ থেকে রুকইয়াহ ও হেফাজত', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700))),
+        Text(sunnahNote, style: TextStyle(fontSize: 12, color: mute(context), height: 1.5)),
+        ...sunnahWidgets(context, s, sunnahRuqyah, showGroups: false),
       ]);
 }

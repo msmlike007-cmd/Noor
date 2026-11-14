@@ -166,7 +166,7 @@ class _HomeState extends State<HomePage> {
               leading: Icon(prayerIcons[i], color: pri(context)),
               title: Text(prayers[i], style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
               subtitle: Text(i == 2
-                  ? 'শুরু: হানাফি ${fmt(tt.asrHanafi)} • আহলে হাদিস ${fmt(tt.asrShafi)}\nশেষ ${fmt(tt.endOf(i))}'
+                  ? 'হানাফি ${fmt(tt.asrHanafi)}${s.hanafi ? ' ✓' : ''}  •  আহলে হাদিস ${fmt(tt.asrShafi)}${s.hanafi ? '' : ' ✓'}\nশেষ ${fmt(tt.endOf(i))}  (✓ = অ্যালার্মে নির্বাচিত)'
                   : 'শুরু ${fmt(tt.five[i])}  •  শেষ ${fmt(tt.endOf(i))}'),
               trailing: IconButton(
                 tooltip: 'আজান অ্যালার্ম',
@@ -268,6 +268,7 @@ class _CalState extends State<CalPage> {
             Text(hiAr(sel, s.adj), textDirection: TextDirection.rtl),
             const Divider(),
             for (var i = 0; i < 5; i++) Text('${prayers[i]}: ${fmt(tt.five[i])} – ${fmt(tt.endOf(i))}'),
+            Text('আসর: হানাফি ${fmt(tt.asrHanafi)} • আহলে হাদিস ${fmt(tt.asrShafi)}'),
             Text('সূর্যোদয়: ${fmt(tt.sunrise)}'),
           ]),
         ),

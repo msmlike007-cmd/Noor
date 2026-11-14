@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:adhan/adhan.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -24,7 +25,7 @@ part 'app_state.dart';
 part 'home_page.dart';
 part 'more_pages.dart';
 part 'quran_dua.dart';
-part 'hadiths_page.dart';
+part 'hadith_page.dart';
 part 'settings_about.dart';
 
 // ═════════════ App ═════════════
@@ -138,7 +139,10 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) widget.s.refresh();
+    if (state == AppLifecycleState.resumed) {
+      widget.s.refresh();
+      if (widget.s.loaded && widget.s.autoLoc) unawaited(widget.s.gps(silent: true));
+    }
   }
 
   @override
@@ -158,6 +162,14 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     final s = widget.s;
     if (!mounted) return;
     if (s.name.isEmpty) await askName(context, s);
+    // প্রথমবার: লোকেশনের অনুমতি চেয়ে অপেক্ষা করে; পরের বার নীরবে হালনাগাদ হয়
+    if (s.autoLoc) {
+      if (!s.sp.containsKey('lat')) {
+        await s.gps();
+      } else {
+        unawaited(s.gps(silent: true));
+      }
+    }
     await Notif.ask();
     await s.resched();
     s.checkUpdate();
